@@ -1,0 +1,12 @@
+# Ignore common build/test output and IDE metadata
+.gradle/
+build/
+target/
+.idea/
+*.iml
+*.class
+*.log
+.settings/
+*.classpath
+*.project
+.DS_Store
