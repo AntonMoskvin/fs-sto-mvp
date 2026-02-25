@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SFSTO MVP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Simple MVP UI using React from CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script>
+      const e = React.createElement;
+      function App() {
+        const [stations, setStations] = React.useState([]);
+        React.useEffect(() => {
+          fetch('/api/v1/stations')
+            .then(res => res.json())
+            .then(data => setStations(data));
+        }, []);
+        return e('div', {style: {padding: '20px'}},
+          e('h1', null, 'SFSTO MVP - Станции ТО'),
+          e('ul', null, stations.map(s => e('li', {key: s.id}, s.name + ' - ' + s.address)))
+        );
+      }
+      ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+    </script>
+  </body>
+  </html>
