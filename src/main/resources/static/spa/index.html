@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SFSTO MVP - SPA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/spa/styles.css" />
+  </head>
+  <body>
+    <header class="spa-header">
+      <div class="brand">SFSTO</div>
+      <nav class="spa-nav" aria-label="Main Navigation">
+        <a href="#/map" class="nav-link">Карта</a>
+        <a href="#/stations" class="nav-link">Станции</a>
+        <a href="#/booking" class="nav-link">Бронирование</a>
+        <a href="#/history" class="nav-link">История</a>
+        <a href="#/admin" class="nav-link">Админ</a>
+      </nav>
+    </header>
+    <main class="spa-content" style="display:flex; height: calc(100vh - 60px);">
+      <aside class="spa-left" style="width:320px; border-right:1px solid #334155; padding:12px; overflow:auto; background:#0b1020; color:#e5e7eb;">
+        <div style="font-weight:700; font-size:18px; margin-bottom:12px;">Меню</div>
+        <div class="section" style="margin-bottom:16px;">
+          <div style="font-weight:700; margin-bottom:6px;">История обслуживания</div>
+          <div id="historyList" style="font-size:12px; opacity:.9;"></div>
+        </div>
+        <div class="section" style="margin-bottom:16px;">
+          <div style="font-weight:700; margin-bottom:6px;">Типы работ</div>
+          <div id="typesList" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+      </aside>
+      <section id="spa-right" style="flex:1; display:flex; flex-direction:column;">
+        <div id="spa-map" style="height:60%;"></div>
+        <div id="servicesGrid" class="card" style="padding:12px; height:40%; overflow:auto;">
+          <h3>Сервисы</h3>
+          <div id="servicesContainer" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:12px;"></div>
+        </div>
+      </section>
+    </main>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/spa/app.js"></script>
+  </body>
+</html>

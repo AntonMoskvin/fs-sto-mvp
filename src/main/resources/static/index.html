@@ -1,104 +1,35 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>SFSTO MVP</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-    <style>
-      #map { height: 60vh; width: 100%; }
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-      #wrapper { padding: 8px; }
-    </style>
-  </head>
+<head>
+  <meta charset="utf-8" />
+  <title>SFSTO MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: 60vh; width: 100%; }
+    body { margin: 0; font-family: Arial, sans-serif; }
+    #content { padding: 8px; }
+  </style>
+</head>
   <body>
-    <div id="map"></div>
-    <div id="wrapper"></div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <div id="map" style="height:60vh; width:100%;"></div>
+    <div id="content" style="padding:8px;">SFSTO MVP — карта станций и бронирование</div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-      let workOptions = [];
-      const map = L.map('map').setView([55.7558, 37.6173], 10);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-
-      // Load available work options first
-      fetch('/api/v1/workoptions')
-        .then(r => r.json())
-        .then(wo => { workOptions = wo; })
-        .catch(() => { workOptions = []; });
-
-      // Load stations with fallback
-      fetch('/api/v1/stations')
-        .then(res => {
-          if (res.ok) return res.json();
-          if (res.status === 405) return fetch('/api/v1/stations/demo').then(r => r.json());
-          throw new Error('Failed to fetch stations');
-        })
-        .then(stations => {
-          stations.forEach(st => {
-            if (typeof st.latitude === 'number' && typeof st.longitude === 'number') {
-              const marker = L.marker([st.latitude, st.longitude]).addTo(map);
-              const div = document.createElement('div');
-              div.innerHTML = `
-                <strong>${st.name}</strong><br/>
-                ${st.address ?? ''}<br/>
-                Start: <input type="datetime-local" id="start-${st.id}"><br/>
-                <div id="works-${st.id}"></div>
-                <button onclick="bookSlot(${st.id})">Book</button>
-              `;
-              // Populate works
-              const worksDiv = div.querySelector('#works-' + st.id);
-              if (workOptions.length > 0) {
-                workOptions.forEach(wo => {
-                  const label = document.createElement('label');
-                  label.innerHTML = `<input type="checkbox" class="wo-${st.id}" value="${wo.id}"> ${wo.name} (${wo.durationMinutes}m)`;
-                  worksDiv.appendChild(label);
-                  worksDiv.appendChild(document.createElement('br'));
-                });
-              } else {
-                worksDiv.innerHTML = '<em>No works loaded</em>';
+      // Inline simple frontend logic to avoid missing static assets
+      (function(){
+        var map = L.map('map').setView([55.7558, 37.6173], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        fetch('/api/v1/stations')
+          .then(r => r.json())
+          .then(stations => {
+            stations.forEach(s => {
+              if (typeof s.latitude === 'number' && typeof s.longitude === 'number') {
+                L.marker([s.latitude, s.longitude]).addTo(map).bindPopup('<b>' + s.name + '</b><br/>' + (s.address||''));
               }
-              marker.bindPopup(div);
-            }
-          });
-        })
-        .catch(err => {
-          console.error('Failed to load stations', err);
-        });
-
-      window.bookSlot = function(stationId) {
-        const startInput = document.getElementById('start-' + stationId);
-        if (!startInput || !startInput.value) {
-          alert('Please select start time');
-          return;
-        }
-        const selected = [];
-        const checkboxes = document.querySelectorAll('.wo-' + stationId);
-        checkboxes.forEach(cb => {
-          if (cb.checked) selected.push(parseInt(cb.value));
-        });
-        const payload = {
-          stationId: stationId,
-          startTime: startInput.value,
-          durationMinutes: null,
-          workOptionIds: selected.length ? selected : null
-        };
-        fetch('/api/v1/appointments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).then(res => res.json())
-          .then(r => {
-            if (r.id) alert('Booked. ID: ' + r.id);
-            else if (r.error) alert('Error: ' + r.error);
-            else alert('Response: ' + JSON.stringify(r));
-          }).catch(err => {
-            console.error('Booking failed', err);
-            alert('Booking failed');
-          });
-      };
+            });
+          }).catch(err => console.error('Failed to load stations', err));
+      })();
     </script>
   </body>
 </html>

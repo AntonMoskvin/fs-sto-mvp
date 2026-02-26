@@ -29,7 +29,14 @@ jobs:
           java-version: '17'
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Build and Test (Postgres)
+      - name: Flyway migrate
+        env:
+          SPRING_PROFILES_ACTIVE: postgres
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/sfsto
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+        run: ./gradlew flywayMigrate
+      - name: Build and Test
         env:
           SPRING_PROFILES_ACTIVE: postgres
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/sfsto

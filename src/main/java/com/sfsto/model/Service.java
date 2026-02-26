@@ -9,6 +9,7 @@ public class Service {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    private String logoUrl;
     private String description;
     private int durationMinutes;
     private double price;
@@ -20,6 +21,8 @@ public class Service {
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
     public int getDurationMinutes() { return durationMinutes; }
     public void setDurationMinutes(int durationMinutes) { this.durationMinutes = durationMinutes; }
     public double getPrice() { return price; }

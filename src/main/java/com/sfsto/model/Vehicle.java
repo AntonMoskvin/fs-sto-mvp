@@ -11,6 +11,7 @@ public class Vehicle {
     private String vin;
     private String make;
     private String model;
+    @Column(name = "manufacture_year")
     private int year;
 
     @ManyToOne
