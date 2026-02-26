@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SFSTO MVP - Extended</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/spa/styles.css" />
+  </head>
+  <body>
+    <header class="spa-header">
+      <div class="brand">SFSTO</div>
+      <nav class="spa-nav">
+        <a href="/spa/index.html" class="nav-link">Главная</a>
+        <a href="#/extended" class="nav-link">Услуги</a>
+      </nav>
+    </header>
+    <main id="extended-content" style="padding:16px; display:flex; gap:16px; height: calc(100vh - 60px);">
+      <section id="left-panel" style="width: 320px; overflow:auto; border-right:1px solid #ddd; padding-right:12px;">
+        <h3>История обслуживания</h3>
+        <div id="ext-history" style="font-size:12px; color:#333;"></div>
+        <hr />
+        <h3>Типы работ</h3>
+        <div id="ext-types" style="display:flex; flex-direction:column; gap:6px;"></div>
+      </section>
+      <section id="right-panel" style="flex:1; overflow:auto; padding:8px; display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:12px;">
+        <div id="ext-services-header" class="card" style="grid-column: 1 / -1;">Сервисы по типам работ</div>
+        <div id="ext-services" class="card" style="grid-column: 1 / -1; display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:12px;"></div>
+      </section>
+    </main>
+    <script src="/spa/extended.js"></script>
+  </body>
+  </html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SFSTO MVP - Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: Inter, system-ui, -apple-system, Arial; margin:0; background:#0b1020; color:#e5e7eb; }
+      .layout { display:flex; height:100vh; }
+      .left { width:320px; border-right:1px solid #334155; padding:12px; overflow:auto; }
+      .right { flex:1; padding:12px; display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
+      .card { background:#11182a; border:1px solid #2b2f45; border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+      .service-logo { height:40px; width:40px; border-radius:6px; background:#334155; display:inline-flex; align-items:center; justify-content:center; color:white; font-weight:700; }
+      .service-title { font-weight:600; }
+      .btn { align-self:flex-start; padding:8px 12px; border:none; border-radius:6px; background:#4f46e5; color:white; cursor:pointer; }
+      .line { height:1px; background:#334155; margin:6px 0; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="left" id="leftMenu">
+        <div class="card">
+          <h3>История обслуживания</h3>
+          <div id="ext-history" style="font-size:12px; color:#cbd5e1; height:120px; overflow:auto;"></div>
+        </div>
+        <div class="card" style="margin-top:10px;">
+          <h3>Типы работ</h3>
+          <div id="ext-types" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+      </aside>
+      <section class="right" id="ext-services">
+        <div class="card" style="grid-column: 1 / -1; display:flex; justify-content:space-between; align-items:center;">
+          <strong>Доступные сервисы</strong>
+          <span id="ext-count"></span>
+        </div>
+      </section>
+    </div>
+    <script>
+      async function loadTypes(){
+        const opts = await fetch('/api/v1/workoptions').then(r => r.json()).catch(()=>[]);
+        const container = document.getElementById('ext-types');
+        container.innerHTML = '';
+        (opts||[]).forEach(o => {
+          const btn = document.createElement('button'); btn.textContent = o.name + ' ('+ o.durationMinutes +'m)';
+          btn.style.marginBottom = '6px';
+          btn.onclick = () => filterStationsByService(o.id);
+          container.appendChild(btn);
+        });
+      }
+      async function filterStationsByService(serviceId){
+        const stations = await fetch('/api/v1/stations?serviceId='+serviceId).then(r=> r.json()).catch(()=>[]);
+        const left = document.getElementById('ext-history'); left.innerHTML = stations.map(s => `<div>${s.name} - ${s.address || ''}</div>`).join('');
+        renderServices();
+      }
+      async function renderServices(){
+        const services = await fetch('/api/v1/services').then(r => r.json()).catch(()=>[]);
+        const section = document.getElementById('ext-services');
+        // first, clear existing cards except header
+        section.innerHTML = section.innerHTML.replace(/<div class="card".*?>Доступные сервисы<\/div>/, '');
+        const header = document.createElement('div'); header.className='card'; header.style.gridColumn='1 / -1'; header.innerHTML = '<strong>Сервисы</strong>';
+        section.appendChild(header);
+        const grid = document.createElement('div'); grid.style.display='grid'; grid.style.gridTemplateColumns='repeat(auto-fill, minmax(240px, 1fr))'; grid.style.gap='12px';
+        services.forEach(s => {
+          const card = document.createElement('div'); card.className='card';
+          const logo = document.createElement('div'); logo.className='service-logo'; logo.textContent = (s.logoUrl ? '' : (s.name ? s.name.charAt(0) : '?')).toString().toUpperCase();
+          const title = document.createElement('div'); title.className='service-title'; title.textContent = s.name;
+          const desc = document.createElement('div'); desc.style.fontSize='12px'; desc.style.color='#cbd5e1'; desc.textContent = s.description || '';
+          const dur = document.createElement('div'); dur.style.fontSize='12px'; dur.textContent = (s.durationMinutes||0) + ' min';
+          const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Записаться';
+          btn.onclick = async () => {
+            // naive booking: pick first station id
+            const stationResp = await fetch('/api/v1/stations').then(r=> r.ok? r.json(): []);
+            const sid = siteIdFromList(stationResp);
+            if (!sid) return alert('Нет доступных станций для бронирования');
+            const payload = { stationId: sid, startTime: new Date().toISOString().slice(0,16), workOptionIds: [s.id] };
+            const res = await fetch('/api/v1/appointments', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            const data = await res.json();
+            if (data.id) alert('Booked. ID: ' + data.id);
+            else alert('Error: ' + (data.error || JSON.stringify(data)));
+          };
+          card.appendChild(logo);
+          card.appendChild(title);
+          card.appendChild(desc);
+          card.appendChild(dur);
+          card.appendChild(btn);
+          grid.appendChild(card);
+        });
+        section.appendChild(grid);
+        document.getElementById('ext-count').textContent = services.length + ' services';
+      }
+      function siteIdFromList(list){
+        if (Array.isArray(list) && list.length>0) return list[0].id; return null;
+      }
+      // load initial data
+      loadTypes();
+      renderServices();
+      // history init
+      fetch('/api/v1/history').then(r=> r.json()).then(data => {
+        const h = document.getElementById('ext-history');
+        if (Array.isArray(data)) h.innerHTML = data.map(d => `<div>${d.timestamp} ${d.description}</div>`).join('');
+      });
+    </script>
+  </body>
+</html>

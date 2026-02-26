@@ -1,24 +1,31 @@
 <!doctype html>
-<html>
+<html lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>SFSTO MVP - SPA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>SFSTO MVP - SPA</title>
     <link rel="stylesheet" href="/spa/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   </head>
   <body>
-    <header class="spa-header">
-      <div class="brand">SFSTO MVP</div>
-      <nav class="spa-nav">
-        <a href="#/map" class="nav-link">Карта</a>
-        <a href="#/stations" class="nav-link">Станции</a>
-        <a href="#/booking" class="nav-link">Бронирование</a>
-        <a href="#/history" class="nav-link">История</a>
-        <a href="#/admin" class="nav-link">Админ</a>
+    <aside id="spa-sidebar" aria-label="Main menu" style="position:fixed; left:0; top:0; bottom:0; width:290px; padding:12px; background:#111827; border-right:1px solid #334155; overflow:auto;">
+      <div class="logo" style="font-weight:800; font-size:18px; text-align:center; margin-bottom:12px; color:white;">СФСТО</div>
+      <nav>
+        <a class="menu-item" href="#/map">Карта</a>
+        <a class="menu-item" href="#/stations">Станции</a>
+        <a class="menu-item" href="#/worktypes">Типы работ</a>
+        <a class="menu-item" href="#/booking">Бронирование</a>
+        <a class="menu-item" href="#/history">История</a>
+        <a class="menu-item" href="#/admin">Админ</a>
       </nav>
-    </header>
-    <main id="spa-content" class="spa-content"></main>
+    </aside>
+    <main id="spa-main" style="margin-left:300px; padding:12px; height:100vh; overflow:auto; display:flex; flex-direction:column;">
+      <div id="spa-map" style="height:52vh;"></div>
+      <section id="servicesGrid" class="card" style="margin-top:12px; padding:12px; height:38vh; overflow:auto;">
+        <h3 style="margin:0 0 8px 0;">Сервисы</h3>
+        <div id="servicesContainer" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:12px;"></div>
+      </section>
+    </main>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/spa/app.js"></script>
   </body>

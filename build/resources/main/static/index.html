@@ -1,35 +1,182 @@
 <!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>SFSTO MVP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    #map { height: 60vh; width: 100%; }
-    body { margin: 0; font-family: Arial, sans-serif; }
-    #content { padding: 8px; }
-  </style>
-</head>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SFSTO MVP</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      :root { --bg: #0b1020; --sidebar: #0b1020; --card: #1f2a3a; --text: #e5e7eb; --accent: #4f46e5; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; font-family: Inter, system-ui, -apple-system, Arial; background: var(--bg); color: var(--text); }
+      #leftMenu { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; background: #111827; border-right: 1px solid #334155; padding: 16px; overflow: auto; }
+      #leftMenu h2 { margin: 0 0 8px; font-size: 14px; color:#e5e7eb; text-transform: uppercase; }
+      #leftMenu .menu-item { display: block; padding: 10px; margin: 6px 0; color: #e5e7eb; text-decoration: none; border-radius: 6px; background: rgba(255,255,255,.02); }
+      #leftMenu .menu-item.active { background: #1f2937; color: #fff; }
+      #leftMenu .menu-item:hover { background: rgba(255,255,255,.08); }
+      #content { margin-left: 320px; padding: 12px; height: 100%; display: flex; flex-direction: column; }
+      #map { height: 48vh; width: 100%; }
+      /* Make worktypes (type of works) scrollable if overflow */
+      #section-worktypes #servicesGrid { max-height: 380px; overflow-y: auto; }
+      #servicesGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; padding: 12px; }
+      .serviceCard { display:flex; flex-direction:column; padding:12px; border:1px solid #334155; border-radius:12px; background:#0b1220; }
+      .serviceCard .logo { height:40px; width:40px; border-radius:6px; background:#334155; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; margin-bottom:6px; }
+      .serviceCard .name { font-weight:700; }
+      .serviceCard .desc { font-size:12px; color:#cbd5e1; }
+      .serviceCard .phone { font-size:12px; color:#93c5fd; }
+      .btn { padding:8px 12px; border:0; border-radius:6px; background: var(--accent); color:white; cursor:pointer; }
+      /* Stations list styling */
+      .stationCard { display:flex; align-items:center; padding:12px; border:1px solid #334155; border-radius:12px; background:#0b1220; }
+      .stationLogo { width:60px; height:60px; border-radius:6px; object-fit:cover; }
+      @media (max-width: 1024px){
+        #leftMenu{ width:100% }
+        #content{ margin-left:0; }
+      }
+    </style>
+  </head>
   <body>
-    <div id="map" style="height:60vh; width:100%;"></div>
-    <div id="content" style="padding:8px;">SFSTO MVP — карта станций и бронирование</div>
+    <div id="roleSwitch" style="position: fixed; top: 8px; right: 8px; background: #111827; color: #e5e7eb; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; z-index: 1000; font-size: 12px;">
+      <label for="roleSelector" style="margin-right:6px;">Роль:</label>
+      <select id="roleSelector" style="padding:4px 8px; border-radius:6px; background:#0b1220; color:#e5e7eb; border:1px solid #334155;">
+        <option value="CLIENT" selected>Клиент</option>
+        <option value="ADMIN">Администратор</option>
+      </select>
+    </div>
+    <aside id="leftMenu" aria-label="Main menu">
+      <h2>Меню</h2>
+      <a class="menu-item" href="#" data-view="map">Карта</a>
+      <a class="menu-item" href="#" data-view="stations">Станции</a>
+      <a class="menu-item" href="#" data-view="worktypes">Типы работ</a>
+      <a class="menu-item" href="#" data-view="booking">Бронирование</a>
+      <a class="menu-item" href="#" data-view="history">История</a>
+      <!-- Заявки: доступна только админу -->
+      <a class="menu-item" href="#" data-view="applications">Заявки</a>
+      <div class="card" id="historyMiniCard" style="margin-top:12px; padding:10px;">
+        <h3 style="margin:0 0 6px; font-size:12px; text-transform:uppercase;">История обслуживания</h3>
+        <div id="historyMini" style="font-size:12px; max-height:120px; overflow:auto;"></div>
+      </div>
+    </aside>
+    <section id="content">
+      <section id="section-map" style="display:block;">
+        <div id="mapControls" style="display:flex; gap:8px; align-items:center; padding:6px 12px;">
+          <label for="mapServiceFilter">Фильтр услуг на карте:</label>
+          <select id="mapServiceFilter" aria-label="Фильтр услуг на карте" style="padding:6px 8px; border-radius:6px; border:1px solid #334155; background:#0b1220; color:#e5e7eb;">
+            <option value="">Все</option>
+          </select>
+        </div>
+        <div id="spa-map" style="height:52vh; border-radius:8px;"></div>
+        <div id="bottomPanel" style="margin-top:8px; padding:10px; background: #0b1220; border:1px solid #334155; border-radius:8px; display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-size:12px; color:#cbd5e1;">Небольшая панель внизу карты: здесь можно показать сводку, ближайшие бронирования и т.д.</div>
+          <div id="bottomPanelStatus" style="font-size:12px; color:#93c5fd;">Нет активных бронирований</div>
+        </div>
+      </section>
+      <section id="section-worktypes" style="display:none;">
+        <div id="servicesGrid" style="margin-top:12px; height:28vh; overflow:auto; padding:12px; border-radius:8px; display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:12px;">
+          <!-- service cards injected here -->
+        </div>
+      </section>
+      <section id="section-stations" style="display:none; padding:12px;">
+        <div id="stationsFilterRow" style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+          <label for="stationsFilter">Фильтр по услуге:</label>
+          <select id="stationsFilter" aria-label="Фильтр станций" style="padding:6px 8px; border-radius:6px; border:1px solid #334155; background:#0b1220; color:#e5e7eb;">
+            <option value="">Все</option>
+          </select>
+        </div>
+        <div id="stationsList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; padding:6px;">
+          <!-- станции будут отрисованы здесь -->
+        </div>
+      </section>
+      <section id="section-booking" style="display:none;">
+        <div id="bookingArea" style="padding:12px;">Бронирование доступно через окно внутри карточки сервиса</div>
+      </section>
+      <section id="section-history" style="display:none;">
+        <div id="historyPanel" class="card" style="margin:12px; padding:10px;">
+          <h3 style="margin:0 0 6px; font-size:12px; text-transform:uppercase;">История обслуживания</h3>
+          <div id="historyMini" style="font-size:12px; max-height:240px; overflow:auto;"></div>
+        </div>
+      </section>
+      <section id="section-admin" style="display:none;">
+        <div id="adminPanel" style="padding:12px;">
+          <h3>Администратор</h3>
+          <div style="display:flex; gap:12px; align-items:stretch;">
+            <div style="flex:1; min-width:420px; border:1px solid #334155; border-radius:8px; padding:12px; background:#0b1220;">
+              <h4 style="margin:0 0 8px;">Уведомления</h4>
+        <div id="adminNotifications" style="max-height:260px; overflow:auto;"></div>
+            </div>
+            <div style="flex:1; min-width:420px; border:1px solid #334155; border-radius:8px; padding:12px; background:#0b1220;">
+              <h4 style="margin:0 0 8px;">История по дате</h4>
+              <label>С даты: <input type="date" id="adminDateFrom"></label>
+              <label> по: <input type="date" id="adminDateTo"></label>
+              <button class="btn" id="adminFilterBtn" style="margin-left:8px;">Применить</button>
+              <div id="adminHistory" style="margin-top:8px; max-height:260px; overflow:auto;"></div>
+            </div>
+            <div style="flex:1; min-width:420px; border:1px solid #334155; border-radius:8px; padding:12px; background:#0b1220;" id="adminPanelPending">
+              <h4 style="margin:0 0 8px;">Заявки в ожидании</h4>
+              <div id="adminPendingList" style="max-height:260px; overflow:auto;"></div>
+              <button class="btn" id="adminPendingRefresh" style="margin-top:8px;">Обновить</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-      // Inline simple frontend logic to avoid missing static assets
-      (function(){
-        var map = L.map('map').setView([55.7558, 37.6173], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        fetch('/api/v1/stations')
-          .then(r => r.json())
-          .then(stations => {
-            stations.forEach(s => {
-              if (typeof s.latitude === 'number' && typeof s.longitude === 'number') {
-                L.marker([s.latitude, s.longitude]).addTo(map).bindPopup('<b>' + s.name + '</b><br/>' + (s.address||''));
+    <script src="/spa/app.js"></script>
+    <script src="/spa/booking-enhanced.js"></script>
+    <script> // Admin UI hydration
+      document.addEventListener('DOMContentLoaded', function(){
+        // load admin notifications
+        fetch('/api/v1/notifications').then(r=>r.json()).then(list=>{
+          const nDiv = document.getElementById('adminNotifications');
+        if (nDiv && list && list.length){
+            nDiv.innerHTML = list.map(n=> `<div>${n.createdAt} | ${n.message} (type: ${n.type}, status: ${n.status}) <button class='btn' data-id='${n.appointmentId}' onclick="fetch('/api/v1/appointments/'+${n.appointmentId}+'/confirm', {method:'POST'}) .then(r=>r.json()).then(console.log).catch(console.error)">Подтвердить</button> <button class='btn' onclick="fetch('/api/v1/appointments/'+${n.appointmentId}+'/deny', {method:'POST'}) .then(r=>r.json()).then(console.log).catch(console.error)">Отклонить</button></div>`).join('');
+          } else {
+            if(nDiv) nDiv.innerHTML = '<div>Нет уведомлений</div>';
+          }
+        });
+        // admin history handler
+        function renderAdminHistory(list){
+          const adminHist = document.getElementById('adminHistory');
+          if (!adminHist) return;
+          if (list && list.length){
+            adminHist.innerHTML = list.map(it => `<div>${(it.timestamp || it.createdAt) } - ${it.description || it.message || ''} (status: ${it.status || ''})</div>`).join('');
+          } else {
+            adminHist.innerHTML = '<div>История пуста</div>';
+          }
+        }
+        // initialize admin history with latest data
+        fetch('/api/v1/history').then(r => r.json()).then(renderAdminHistory);
+        const adminFilterBtn = document.getElementById('adminFilterBtn');
+        if (adminFilterBtn){
+          adminFilterBtn.addEventListener('click', ()=>{
+            const fromVal = document.getElementById('adminDateFrom')?.value;
+            const toVal = document.getElementById('adminDateTo')?.value;
+            fetch('/api/v1/history').then(r => r.json()).then(list => {
+              let items = list || [];
+              if (fromVal){ const fromDate = new Date(fromVal); items = items.filter(it => new Date(it.timestamp || it.date) >= fromDate); }
+              if (toVal){ const toDate = new Date(toVal); items = items.filter(it => new Date(it.timestamp || it.date) <= toDate); }
+              const adminHist = document.getElementById('adminHistory'); if (adminHist){ adminHist.innerHTML = items.map(it => `<div>${it.timestamp || it.date} - ${it.description || ''} (vehicle: ${it.vehicleId || ''})</div>`).join(''); }
+            });
+          });
+        }
+        // Admin pending list UI wiring
+        const adminPendingRefresh = document.getElementById('adminPendingRefresh');
+        const adminPendingList = document.getElementById('adminPendingList');
+        if (adminPendingRefresh && adminPendingList){
+          const renderPending = () => {
+            fetch('/api/v1/appointments/pending').then(r => r.json()).then(list => {
+              if (adminPendingList){
+                if (list && list.length){
+                  adminPendingList.innerHTML = list.map(p => `<div>ID:${p.id} | ${p.stationName} | ${p.vehicleVin || '-'} | ${p.startTime} - ${p.endTime} | ${p.workOptions || ''} <button class='btn' onclick="fetch('/api/v1/appointments/'+${p.id}+'/confirm', {method:'POST'}) .then(r=>r.json()).then(console.log).catch(console.error)">Подтвердить</button> <button class='btn' onclick="fetch('/api/v1/appointments/'+${p.id}+'/deny', {method:'POST'}) .then(r=>r.json()).then(console.log).catch(console.error)">Отклонить</button></div>`).join('');
+                } else {
+                  adminPendingList.innerHTML = '<div>Нет заявок</div>';
+                }
               }
             });
-          }).catch(err => console.error('Failed to load stations', err));
-      })();
+          };
+          adminPendingRefresh.addEventListener('click', renderPending);
+          renderPending();
+        }
+      });
     </script>
   </body>
 </html>

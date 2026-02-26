@@ -7,4 +7,5 @@ public class HistoryDTO {
     public Long vehicleId;
     public String description;
     public LocalDateTime timestamp;
+    public String status;
 }

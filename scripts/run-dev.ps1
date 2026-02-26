@@ -2,7 +2,6 @@ param()
 Write-Host 'Starting Postgres (local Docker) and dev Spring Boot app (Gradle) in B mode...'
 
 docker-compose down
-docker-compose up -d
 docker-compose build
 docker-compose up -d db
 Start-Sleep -Seconds 6
