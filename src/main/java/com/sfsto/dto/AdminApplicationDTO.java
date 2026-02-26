@@ -14,4 +14,7 @@ public class AdminApplicationDTO {
     public String workNames; // comma separated list of work option names
     public String contactPhone;
     public String customerComment; // comment from client to admin
+    // Additional customer info
+    public String customerName;
+    public String customerPhone;
 }

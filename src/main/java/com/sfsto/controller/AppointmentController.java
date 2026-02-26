@@ -12,6 +12,8 @@ import com.sfsto.repository.VehicleRepository;
 import com.sfsto.repository.WorkOptionRepository;
 import com.sfsto.repository.AppointmentWorkRepository;
 import com.sfsto.dto.AdminPendingDTO;
+import com.sfsto.dto.AdminApplicationDTO;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -159,5 +161,32 @@ public class AppointmentController {
         appt.setStatus("CANCELLED");
         appointmentRepository.save(appt);
         return ResponseEntity.ok(Map.of("id", appt.getId(), "status", appt.getStatus()));
+    }
+
+    @GetMapping("/applications")
+    public List<AdminApplicationDTO> applications(){
+        return appointmentRepository.findAll().stream().map(a -> {
+            AdminApplicationDTO dto = new AdminApplicationDTO();
+            Vehicle v = a.getVehicle();
+            dto.vehicleMake = v != null ? v.getMake() : null;
+            dto.vehicleModel = v != null ? v.getModel() : null;
+            dto.licensePlate = v != null ? v.getVin() : null;
+            dto.startTime = a.getStartTime();
+            dto.endTime = a.getEndTime();
+            dto.status = a.getStatus();
+            if (a.getWorkItems() != null){
+                dto.workNames = a.getWorkItems().stream()
+                        .map(wi -> wi.getWorkOption() != null ? wi.getWorkOption().getName() : null)
+                        .filter(java.util.Objects::nonNull).collect(java.util.stream.Collectors.joining(", "));
+            }
+            if (v != null && v.getCustomer() != null){
+                // customer data
+                dto.customerName = v.getCustomer().getName();
+                dto.customerPhone = v.getCustomer().getPhone();
+            }
+            dto.contactPhone = dto.customerPhone;
+            dto.customerComment = a.getCustomerComment();
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

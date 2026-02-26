@@ -13,19 +13,41 @@
       <nav>
         <a class="menu-item" href="#/map">Карта</a>
         <a class="menu-item" href="#/stations">Станции</a>
-        <a class="menu-item" href="#/worktypes">Типы работ</a>
+        <!-- Типы работ для администратора удалены; доступ для клиентов сохраняется через разделы, если нужно -->
         <a class="menu-item" href="#/booking">Бронирование</a>
         <a class="menu-item" href="#/history">История</a>
-        <a class="menu-item" href="#/admin">Админ</a>
+        <a class="menu-item" href="#/applications">Заявки</a>
       </nav>
+      <div id="historyMini" style="margin-top:12px; padding:8px; border-radius:6px; background:#0b1220; color:#cbd5e1; font-family:Arial, sans-serif; font-size:12px; min-height:120px; overflow:auto;"></div>
     </aside>
     <main id="spa-main" style="margin-left:300px; padding:12px; height:100vh; overflow:auto; display:flex; flex-direction:column;">
+      <!-- Пропущенный Admin таб: карта/станции/заявки доступны через роли -->
       <div id="spa-map" style="height:52vh;"></div>
       <section id="servicesGrid" class="card" style="margin-top:12px; padding:12px; height:38vh; overflow:auto;">
         <h3 style="margin:0 0 8px 0;">Сервисы</h3>
         <div id="servicesContainer" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:12px;"></div>
       </section>
     </main>
+    <section id="section-applications" style="display:none; padding:12px;">
+      <h3 style="margin:0 0 8px 0;">Заявки</h3>
+      <div style="overflow:auto; max-height:60vh; border:1px solid #334155; border-radius:6px; padding:8px;">
+        <table id="applicationsTable" style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Автомобиль</th>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Тип работ</th>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Дата</th>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Время</th>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Статус</th>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Клиент</th>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Телефон</th>
+              <th style="border-bottom:1px solid #334155; padding:6px; text-align:left;">Комментарий</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsBody"></tbody>
+        </table>
+      </div>
+    </section>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/spa/app.js"></script>
   </body>

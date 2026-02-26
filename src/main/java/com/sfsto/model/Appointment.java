@@ -14,6 +14,7 @@ public class Appointment {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String status; // SCHEDULED, CANCELLED, COMPLETED
+    private String customerComment;
 
     @ManyToOne
     @JoinColumn(name = "station_id")
@@ -41,4 +42,6 @@ public class Appointment {
     public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
     public List<AppointmentWork> getWorkItems() { return workItems; }
     public void setWorkItems(List<AppointmentWork> workItems) { this.workItems = workItems; }
+    public String getCustomerComment() { return customerComment; }
+    public void setCustomerComment(String customerComment) { this.customerComment = customerComment; }
 }

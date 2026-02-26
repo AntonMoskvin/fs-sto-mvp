@@ -21,10 +21,18 @@
   }
   function applyRoleUI(role){
     const isAdmin = (role === 'ADMIN');
+    // Admin link visibility (Admin tab removed from menu as requested)
     const adminLink = document.querySelector('#leftMenu a.menu-item[href="#admin"]');
     if (adminLink) adminLink.style.display = isAdmin ? '' : 'none';
+    // Admin sections visibility (keep hidden since admin tab is removed)
     const adminSections = ['section-admin','adminPanel','adminNotifications','adminHistory','adminPendingList','adminPendingRefresh'];
     adminSections.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = isAdmin ? '' : 'none'; });
+    // Admin should not see the map
+    const mapEl = document.getElementById('spa-map');
+    if (mapEl) mapEl.style.display = isAdmin ? 'none' : '';
+    // Hide worktypes tab for admins
+    const worktypesLink = document.querySelector('#leftMenu a.menu-item[href="#/worktypes"]');
+    if (worktypesLink) worktypesLink.style.display = isAdmin ? 'none' : '';
     if (!isAdmin && window.location.hash === '#admin') showSection('map');
   }
   // init role selector (buttonless login)
@@ -208,13 +216,38 @@
     }).catch(()=>{ /* ignore history errors */ });
   }
 
+  function fetchApplications(){
+    fetch('/api/v1/applications')
+      .then(r => r.json())
+      .then(list => {
+        const body = document.getElementById('applicationsBody');
+        if (!body) return;
+        if (Array.isArray(list) && list.length){
+          body.innerHTML = list.map(a => `<tr>${
+            `<td>${a.vehicleMake || ''} ${a.vehicleModel || ''} (${a.licensePlate || ''})</td>`+
+            `<td>${a.workNames || ''}</td>`+
+            `<td>${a.startTime ? new Date(a.startTime).toLocaleDateString() : ''}</td>`+
+            `<td>${a.startTime ? new Date(a.startTime).toLocaleTimeString() : ''} - ${a.endTime ? new Date(a.endTime).toLocaleTimeString() : ''}</td>`+
+            `<td>${a.status || ''}</td>`+
+            `<td>${a.customerName || ''}</td>`+
+            `<td>${a.customerPhone || ''}</td>`+
+            `<td>${a.customerComment || ''}</td>`+
+          `</tr>`;
+          `).join('');
+        } else {
+          body.innerHTML = '<tr><td colspan="8">Нет заявок</td></tr>';
+        }
+      })
+      .catch(()=>{ const body = document.getElementById('applicationsBody'); if (body) body.innerHTML = '<tr><td colspan="8">Ошибка загрузки</td></tr>'; });
+  }
+
   // Section navigation helpers (left menu)
   function showSection(sec){
     // Role-based access: admin sections should be hidden for CLIENT
     if (sec === 'admin' && getRole() !== 'ADMIN') {
       sec = 'map';
     }
-    const sections = ['section-map','section-stations','section-worktypes','section-booking','section-history','section-admin'];
+    const sections = ['section-map','section-stations','section-worktypes','section-booking','section-history','section-applications','section-admin'];
     sections.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = (id === 'section-' + sec) ? 'block' : 'none';
@@ -227,8 +260,10 @@
     // Close any open popups to ensure clean state when switching tabs
     if (typeof map.closePopup === 'function') map.closePopup();
     // highlight active menu item
-    // load history when opening history tab
-    if (sec === 'history') fetchHistory();
+    // load history when opening history tab or switching sections
+    fetchHistory();
+    // If we navigated to applications, load the detailed applications list
+    if (sec === 'applications') fetchApplications();
     // highlight active menu item
   document.querySelectorAll('#leftMenu .menu-item').forEach(item => {
     const view = item.getAttribute('data-view');
@@ -253,5 +288,7 @@
 
   // On load, show the main section by role (no hash in URL)
   showSection(getRole() === 'ADMIN' ? 'admin' : 'map');
+  // Ensure history widget is populated on load for both roles
+  fetchHistory();
   // end of initialization
 })();
