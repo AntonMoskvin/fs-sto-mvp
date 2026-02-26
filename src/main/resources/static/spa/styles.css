@@ -15,3 +15,22 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter, system-u
 .serviceCard .name{font-weight:700}
 .serviceCard .desc{font-size:12px;color:#cbd5e1}
 .btn{padding:8px 12px;border:0;border-radius:6px;background:var(--accent);color:white}
+
+/* Applications table styling */
+#applicationsTable{ width:100%; border-collapse: collapse; }
+#applicationsTable th, #applicationsTable td{ border-bottom:1px solid #334155; padding:6px 8px; text-align:left; }
+#applicationsTable thead{ background: rgba(2,6,23,.8); }
+
+/* History mini styling */
+.history-item{ display:flex; align-items:center; gap:8px; padding:4px 0; border-bottom:1px dashed rgba(255,255,255,.08); }
+.history-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; background:#10b981; }
+
+/* Responsive tweaks */
+@media (max-width: 1024px){
+  #spa-sidebar{ width: 240px; }
+  main{ margin-left: 0; }
+}
+@media (max-width: 720px){
+  #spa-sidebar{ position: static; width: 100%; height: auto; }
+  #spa-main{ margin: 0; }
+}

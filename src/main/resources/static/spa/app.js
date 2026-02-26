@@ -208,7 +208,13 @@
       const historyEl = document.getElementById('historyMini');
       if (historyEl) {
         if (Array.isArray(data) && data.length) {
-          historyEl.innerHTML = data.map(it => `<div>${it.timestamp || it.date || ''} - ${it.description || ''} (status: ${it.status || ''})</div>`).join('');
+          const items = data.slice(0, 10);
+          historyEl.innerHTML = items.map(it => {
+            const ts = it.timestamp || it.date || '';
+            const desc = it.description || '';
+            const stat = it.status || '';
+            return `<div class="history-item"><span class="history-dot"></span><span>${ts}</span><span>- ${desc} (status: ${stat})</span></div>`;
+          }).join('');
         } else {
           historyEl.innerHTML = '<div>История пуста</div>';
         }
