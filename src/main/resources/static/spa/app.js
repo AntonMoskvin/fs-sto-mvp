@@ -229,22 +229,32 @@
         const body = document.getElementById('applicationsBody');
         if (!body) return;
         if (Array.isArray(list) && list.length){
-          body.innerHTML = list.map(a => `<tr>${
-            `<td>${a.vehicleMake || ''} ${a.vehicleModel || ''} (${a.licensePlate || ''})</td>`+
-            `<td>${a.workNames || ''}</td>`+
-            `<td>${a.startTime ? new Date(a.startTime).toLocaleDateString() : ''}</td>`+
-            `<td>${a.startTime ? new Date(a.startTime).toLocaleTimeString() : ''} - ${a.endTime ? new Date(a.endTime).toLocaleTimeString() : ''}</td>`+
-            `<td>${a.status || ''}</td>`+
-            `<td>${a.customerName || ''}</td>`+
-            `<td>${a.customerPhone || ''}</td>`+
-            `<td>${a.customerComment || ''}</td>`+
-          `</tr>`;
+          body.innerHTML = list.map(a => `
+            <tr>
+              <td>${a.vehicleMake || ''} ${a.vehicleModel || ''} (${a.licensePlate || ''})</td>
+              <td>${a.workNames || ''}</td>
+              <td>${a.startTime ? new Date(a.startTime).toLocaleDateString() : ''}</td>
+              <td>${a.startTime ? new Date(a.startTime).toLocaleTimeString() : ''} - ${a.endTime ? new Date(a.endTime).toLocaleTimeString() : ''}</td>
+              <td>${a.status || ''}</td>
+              <td>${a.customerName || ''}</td>
+              <td>${a.customerPhone || ''}</td>
+              <td>${a.customerComment || ''}</td>
+              <td>${a.status === 'PENDING' ? '<button class="btn" onclick="confirmAppointment('+a.id+')">Подтвердить</button> <button class="btn" onclick="denyAppointment('+a.id+')">Отклонить</button>' : ''}</td>
+            </tr>
           `).join('');
         } else {
           body.innerHTML = '<tr><td colspan="8">Нет заявок</td></tr>';
         }
       })
       .catch(()=>{ const body = document.getElementById('applicationsBody'); if (body) body.innerHTML = '<tr><td colspan="8">Ошибка загрузки</td></tr>'; });
+  }
+
+  // Actions for applications: confirm/deny
+  window.confirmAppointment = function(id){
+    fetch('/api/v1/appointments/'+id+'/confirm', { method: 'POST' }).then(()=> fetchApplications()).catch(console.error);
+  }
+  window.denyAppointment = function(id){
+    fetch('/api/v1/appointments/'+id+'/deny', { method: 'POST' }).then(()=> fetchApplications()).catch(console.error);
   }
 
   // Section navigation helpers (left menu)
